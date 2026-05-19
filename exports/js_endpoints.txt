@@ -1,0 +1,3 @@
+/v1/activityindicator/loading
+/v1/gsessionid
+/v1/crupload

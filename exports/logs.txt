@@ -1,0 +1,7 @@
+
+[+] Crawling: https://example.com
+    Status: 200
+
+[+] Results saved to exports/results.txt
+
+[+] Total URLs Crawled: 1

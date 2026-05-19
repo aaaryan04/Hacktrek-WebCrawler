@@ -1,0 +1,5 @@
+https://google.com
+https://google.com/search/howsearchworks/?fg=1
+https://google.com/advanced_search?hl=en-IN&fg=1
+https://google.com/history/privacyadvisor/search/unauth?utm_source=googlemenu&fg=1&cctld=com
+https://google.com/history/optout?hl=en-IN&fg=1

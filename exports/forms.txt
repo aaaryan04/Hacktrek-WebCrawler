@@ -1,0 +1,24 @@
+========== FORM 1 ==========
+Action : /search
+Method : None
+Input Name : ie
+Input Type : hidden
+Input Name : hl
+Input Type : hidden
+Input Name : source
+Input Type : hidden
+Input Name : biw
+Input Type : hidden
+Input Name : bih
+Input Type : hidden
+Input Name : q
+Input Type : None
+Input Name : btnG
+Input Type : submit
+Input Name : btnI
+Input Type : submit
+Input Name : iflsig
+Input Type : hidden
+Input Name : gbv
+Input Type : hidden
+
