@@ -1,0 +1,41 @@
+# Hacktrek WebCrawler — local orchestration.
+#
+#   docker compose up --build              # backend API only (http://localhost:8000)
+#   docker compose --profile frontend up   # also serve the built frontend (:8080)
+#
+# The frontend service serves frontend/dist, so build it first:
+#   cd frontend && npm ci && npm run build
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hacktrek-api
+    container_name: hacktrek-api
+    ports:
+      - "8000:8000"
+    environment:
+      # See .env.example for the full list of supported variables.
+      ALLOWED_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173,http://localhost:8080"
+      DNS_NAMESERVERS: "8.8.8.8,1.1.1.1"
+      REQUEST_TIMEOUT: "10"
+      USER_AGENT: "Hacktrek-WebCrawler/2.0"
+      # 0 disables rate limiting; raise it for a public deployment.
+      RATE_LIMIT_PER_MINUTE: "120"
+      # 0 disables response caching; small TTL avoids hammering targets.
+      SCAN_CACHE_TTL: "0"
+    restart: unless-stopped
+
+  # Optional: serve the pre-built frontend behind nginx. Enable with:
+  #   docker compose --profile frontend up
+  frontend:
+    image: nginx:alpine
+    container_name: hacktrek-frontend
+    profiles: ["frontend"]
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - api
+    restart: unless-stopped

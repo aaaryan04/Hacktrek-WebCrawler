@@ -1,22 +1,9 @@
-function StatsCard({
-  title,
-  value,
-  color
-}) {
-
+function StatsCard({ title, value }) {
   return (
-
-    <div className="stats-card">
-
-      <h2 style={{ color }}>
-        {value}
-      </h2>
-
-      <p>
-        {title}
-      </p>
-
-    </div>
+    <article className="stats-card">
+      <strong>{value}</strong>
+      <span>{title}</span>
+    </article>
   );
 }
 

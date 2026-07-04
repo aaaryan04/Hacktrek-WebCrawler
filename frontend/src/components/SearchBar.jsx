@@ -1,31 +1,32 @@
-function SearchBar({
-  url,
-  setUrl,
-  onSearch
-}) {
+import { FaPlay } from "react-icons/fa";
 
+function SearchBar({ activeScan, loading, onSearch, setUrl, url }) {
   return (
-
-    <div className="search-container">
+    <section className="search-container" aria-label="Target scanner">
+      <div className="search-copy">
+        <span>Target</span>
+        <strong>{activeScan?.title || "Scanner"}</strong>
+      </div>
 
       <input
-        type="text"
-        placeholder="Enter target URL (e.g., google.com)"
-        value={url}
-        onChange={(e) =>
-          setUrl(e.target.value)
-        }
+        aria-label="Target URL"
         className="search-input"
+        onChange={(event) => setUrl(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            onSearch();
+          }
+        }}
+        placeholder="example.com or https://example.com"
+        type="text"
+        value={url}
       />
 
-      <button
-        className="search-button"
-        onClick={onSearch}
-      >
-        →
+      <button className="search-button" disabled={loading} onClick={onSearch}>
+        <FaPlay aria-hidden="true" />
+        <span>{loading ? "Scanning" : "Run Scan"}</span>
       </button>
-
-    </div>
+    </section>
   );
 }
 

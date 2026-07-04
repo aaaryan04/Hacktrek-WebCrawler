@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+venv/
+.venv/
+
+# JavaScript
+node_modules/
+dist/
+dist-ssr/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Environment and local runtime
+.env
+.env.*
+!.env.example
+*.local
+database/scan_logs.json
+
+# Editor and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Generated scanner output
+exports/*.log
+exports/*.tmp
+exports/*.png
+
+# Stray root Node cruft (real frontend lives in frontend/)
+/package.json
+/package-lock.json
+/main.py

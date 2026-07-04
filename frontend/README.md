@@ -1,16 +1,68 @@
-# React + Vite
+# Hacktrek WebCrawler Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 19 + Vite dashboard for running Hacktrek WebCrawler scans and viewing
+report-ready assessment output. It talks to the FastAPI backend
+(`/assessment`, `/headers`, `/forms`, `/tech`, `/robots`, `/sitemap`,
+`/subdomains`, `/params`, `/logs`, `/health`).
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Eight scan modules** – Full Assessment, Header Audit, Form Mapper, Tech
+  Fingerprint, Robots Review, Sitemap Pull, Subdomain Sweep, Parameter Finder.
+- **Visual risk gauge** – inline-SVG donut for the 0–100 risk score with a
+  colour-coded risk level (no chart library added).
+- **Severity distribution chart** – inline-SVG bar chart of findings by
+  severity (critical → info).
+- **Scan history** – every scan is saved to `localStorage`; click any entry to
+  instantly re-view its full result. Clear the list from the history panel.
+- **Dark / light theme** – CSS-variable theme system with a toggle in the
+  navbar, persisted to `localStorage` and seeded from the OS preference.
+- **Report export** – download **JSON**, download **CSV**, open a formatted
+  **printable report** (`window.print` → PDF), and **copy JSON** to clipboard.
+- **Live logs** – the app polls `GET /logs?url=` during a scan and streams the
+  terminal output into the results panel.
+- **Toasts, skeletons, and states** – toast notifications for scan
+  success/failure, loading skeletons instead of plain text, and clearer
+  empty/error states.
+- **Accessible + responsive** – keyboard-focus styles, ARIA labelling, and a
+  layout that collapses cleanly on tablet and mobile.
 
-## React Compiler
+## Scripts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install      # install dependencies
+npm run dev      # start the dev server
+npm run build    # production build
+npm run lint     # eslint
+npm run preview  # preview the production build
+```
 
-## Expanding the ESLint configuration
+## API base URL
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The dashboard defaults to the hosted backend. Override it with a Vite env var
+when running the backend locally:
+
+```bash
+copy .env.example .env.local   # Windows
+# cp .env.example .env.local   # macOS / Linux
+```
+
+`.env.example`:
+
+```
+VITE_API_BASE_URL=http://127.0.0.1:8000
+```
+
+`VITE_API_BASE_URL` is read at build time via `import.meta.env`; when it is
+unset the app falls back to `https://hacktrek-webcrawler.onrender.com`.
+
+## Project structure
+
+```
+src/
+  App.jsx              # dashboard shell, scan orchestration, log polling
+  components/          # UI: RiskGauge, SeverityChart, ScanHistory, ToastStack,
+                       #     ThemeToggle, Skeleton, LiveLogs, ResultPanel, ...
+  hooks/               # useLocalStorage, useTheme, useToasts
+  utils/               # format helpers + JSON/CSV/print exporters
+```

@@ -1,0 +1,9 @@
+# Development & test dependencies for the Hacktrek WebCrawler backend.
+# Install alongside the runtime deps:
+#   pip install -r requirements.txt -r requirements-dev.txt
+#
+# Runtime deps live in requirements.txt (fastapi, uvicorn, requests, ...).
+
+pytest==8.4.1
+# Starlette's TestClient is built on httpx; required to exercise the API offline.
+httpx==0.28.1

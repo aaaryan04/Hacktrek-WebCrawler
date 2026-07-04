@@ -1,0 +1,42 @@
+# Keep the build context small and secrets out of the image.
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+venv/
+.venv/
+
+# Node / frontend build artifacts (backend image doesn't need them)
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+dist-ssr/
+*.log
+
+# Environment & local runtime
+.env
+.env.*
+!.env.example
+*.local
+database/scan_logs.json
+
+# Tests & dev tooling (not needed at runtime)
+tests/
+requirements-dev.txt
+.github/
+
+# VCS / editor / OS
+.git/
+.gitignore
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Docs & samples
+exports/
+*.md

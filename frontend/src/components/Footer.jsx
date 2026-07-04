@@ -1,12 +1,11 @@
-function Footer() {
-
+function Footer({ apiBaseUrl }) {
   return (
-
-    <div className="footer">
-
-      Hacktrek-WebCrawler v1.0.0
-
-    </div>
+    <footer className="footer">
+      <span>Hacktrek WebCrawler v2.0</span>
+      <span className="footer-api" title={apiBaseUrl}>
+        API: {apiBaseUrl}
+      </span>
+    </footer>
   );
 }
 
