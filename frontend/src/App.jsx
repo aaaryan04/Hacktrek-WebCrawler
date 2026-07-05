@@ -28,7 +28,8 @@ import { useToasts } from "./hooks/useToasts";
 import { normalizeLogLines } from "./utils/format";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "https://hacktrek-webcrawler.onrender.com";
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://hacktrek-webcrawler-s317.onrender.com";
 
 const HISTORY_KEY = "hacktrek:history";
 const HISTORY_LIMIT = 24;

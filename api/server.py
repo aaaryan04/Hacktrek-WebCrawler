@@ -45,7 +45,8 @@ class Settings:
         raw_origins = os.getenv(
             "ALLOWED_ORIGINS",
             "http://localhost:5173,http://127.0.0.1:5173,"
-            "http://localhost:3000,http://127.0.0.1:3000",
+            "http://localhost:3000,http://127.0.0.1:3000,"
+            "https://hacktrek-web-crawler.vercel.app",
         )
         self.allowed_origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
         # Credentials are never used with a "*" wildcard (invalid per CORS spec).
