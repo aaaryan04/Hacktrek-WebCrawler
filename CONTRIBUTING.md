@@ -47,7 +47,7 @@ and edit as needed:
 | `ALLOWED_ORIGIN_REGEX` | matches `hacktrek-web-crawler*.vercel.app` | Regex CORS allow-list (covers Vercel preview URLs) |
 | `ALLOW_CREDENTIALS` | `false` | Allow credentialed CORS (ignored with `*`) |
 | `REQUEST_TIMEOUT` | `10` | Seconds before an outbound fetch times out |
-| `USER_AGENT` | `Hacktrek-WebCrawler/2.0` | UA sent on scan requests |
+| `USER_AGENT` | `Hacktrek-WebCrawler/1.0` | UA sent on scan requests |
 | `MAX_REDIRECTS` | `10` | Max redirects followed |
 | `DNS_NAMESERVERS` | `8.8.8.8,1.1.1.1` | Resolvers (`system` = OS resolvers) |
 | `DNS_TIMEOUT` | `5` | Seconds budget for DNS queries |

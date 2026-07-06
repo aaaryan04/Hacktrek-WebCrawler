@@ -19,7 +19,7 @@ services:
       ALLOWED_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173,http://localhost:8080"
       DNS_NAMESERVERS: "8.8.8.8,1.1.1.1"
       REQUEST_TIMEOUT: "10"
-      USER_AGENT: "Hacktrek-WebCrawler/2.0"
+      USER_AGENT: "Hacktrek-WebCrawler/1.0"
       # 0 disables rate limiting; raise it for a public deployment.
       RATE_LIMIT_PER_MINUTE: "120"
       # 0 disables response caching; small TTL avoids hammering targets.

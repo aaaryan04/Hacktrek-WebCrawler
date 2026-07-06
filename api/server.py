@@ -81,7 +81,7 @@ class Settings:
         self.request_timeout = _env_float("REQUEST_TIMEOUT", 10.0)
         self.dns_timeout = _env_float("DNS_TIMEOUT", 5.0)
         self.tls_timeout = _env_float("TLS_TIMEOUT", 6.0)
-        self.user_agent = os.getenv("USER_AGENT", "Hacktrek-WebCrawler/2.1")
+        self.user_agent = os.getenv("USER_AGENT", "Hacktrek-WebCrawler/1.0")
         self.max_redirects = _env_int("MAX_REDIRECTS", 10)
         # Reliable public resolvers by default (the host's own resolver is often
         # slow/unreachable in container/CI environments). Set to "system" to use
