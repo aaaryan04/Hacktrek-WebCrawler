@@ -54,7 +54,7 @@ VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
 
 `VITE_API_BASE_URL` is read at build time via `import.meta.env`; when it is
-unset the app falls back to `https://hacktrek-webcrawler.onrender.com`.
+unset the app falls back to `https://hacktrek-webcrawler-s317.onrender.com`.
 
 ## Project structure
 

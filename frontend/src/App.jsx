@@ -212,19 +212,39 @@ function App() {
     [activeModule]
   );
 
-  // API health probe — runs once, aborts on unmount. Never triggers a scan.
+  // API health probe — polls with backoff so a Render cold-start (which often
+  // answers the very first request with a transient 502 while the container
+  // boots) self-heals instead of leaving the badge stuck on "degraded"/
+  // "offline" for the rest of the session. Once healthy, keeps a slow
+  // heartbeat so a later outage still gets reflected. Never triggers a scan.
   useEffect(() => {
     const controller = new AbortController();
+    let timeoutId;
+    let attempt = 0;
 
-    fetch(`${API_BASE_URL}/`, { signal: controller.signal })
-      .then((response) => {
-        setApiStatus(response.ok ? "online" : "degraded");
-      })
-      .catch((error) => {
-        if (error.name !== "AbortError") setApiStatus("offline");
-      });
+    const probe = () => {
+      fetch(`${API_BASE_URL}/`, { signal: controller.signal })
+        .then((response) => {
+          const ok = response.ok;
+          setApiStatus(ok ? "online" : "degraded");
+          attempt = ok ? 0 : attempt + 1;
+          const delay = ok ? 45000 : Math.min(4000 * 2 ** attempt, 20000);
+          timeoutId = setTimeout(probe, delay);
+        })
+        .catch((error) => {
+          if (error.name === "AbortError") return;
+          setApiStatus("offline");
+          attempt += 1;
+          timeoutId = setTimeout(probe, Math.min(4000 * 2 ** attempt, 20000));
+        });
+    };
 
-    return () => controller.abort();
+    probe();
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const stopLogPolling = useCallback(() => {
