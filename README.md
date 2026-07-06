@@ -1,57 +1,111 @@
-# Hacktrek WebCrawler
+# 🛡️ Hacktrek WebCrawler
 
-Hacktrek WebCrawler is a full-stack reconnaissance and website assessment dashboard built with React, Vite, FastAPI, and Python. It helps run quick authorized checks against a target website, summarize the exposed surface, score basic security posture, and export structured evidence for reporting.
+A full-stack reconnaissance and website assessment platform built with **React, Vite, FastAPI, and Python**. It runs authorized recon against a target, fingerprints its exposed surface, scores its security posture, and turns the results into a report-ready export.
 
-## Final Project Scope
+> ⚠️ **Educational use only.** Only scan websites you own or have explicit authorization to test.
 
-This project is designed as a practical cybersecurity and web engineering final project. It combines a modern dashboard, API-driven scanner modules, risk scoring, evidence collection, and report-ready output.
+[![CI](https://github.com/aaaryan04/Hacktrek-WebCrawler/actions/workflows/ci.yml/badge.svg)](https://github.com/aaaryan04/Hacktrek-WebCrawler/actions/workflows/ci.yml)
 
-## Key Features
+---
 
-- Full assessment workflow with one-click recon across multiple modules
-- Security score, risk level, severity findings, and remediation guidance
-- DNS-aware SSRF protection: localhost, private, loopback, link-local, and
-  reserved targets are blocked even when reached via DNS or IPv6 translation
-- HTTP security header audit with missing-header detection
-- Cookie flag audit (Secure, HttpOnly, SameSite)
-- WAF / CDN fingerprinting (Cloudflare, Akamai, Fastly, and more)
-- TLS certificate and protocol inspection with expiry findings
-- DNS record lookups (A, AAAA, MX, NS, TXT)
-- Form discovery with method/input analysis
-- Technology fingerprinting for common frameworks and libraries
-- robots.txt and sitemap.xml collection
-- Parameterized URL discovery for validation review
-- Subdomain sweep with live DNS resolution of common candidates
-- Exportable JSON, CSV, and printable/PDF reports plus copy-to-clipboard
-- Optional per-IP rate limiting and short-TTL response caching (env-driven)
-- Responsive dashboard designed for demos, screenshots, and presentations
+## 🌐 Live Demo
 
-## Documentation
+| | |
+| --- | --- |
+| **Frontend** | [hacktrek-web-crawler.vercel.app](https://hacktrek-web-crawler.vercel.app/) |
+| **Backend API** | [hacktrek-webcrawler-s317.onrender.com](https://hacktrek-webcrawler-s317.onrender.com/) |
 
-- [Project Report](PROJECT_REPORT.md)
-- [Security Policy](SECURITY.md)
-- [Frontend Notes](frontend/README.md)
+> The backend is hosted on Render's free tier — the first request after a period of inactivity can take 20-50s to spin the container back up. The dashboard's "API Online/Offline" badge retries automatically once it wakes up.
 
-## Tech Stack
+---
 
-- Frontend: React 19, Vite, CSS, react-icons
-- Backend: FastAPI, Uvicorn, Requests, BeautifulSoup, dnspython
-- Testing / DevOps: pytest, Docker, docker-compose, GitHub Actions CI
-- Language: JavaScript and Python
-- Output: Structured JSON assessment reports (plus CSV and printable exports)
+## 📸 Screenshots
 
-## Architecture
+> Drop the corresponding image files into `screenshots/` with these exact names and they'll render below.
+
+### Dashboard
+
+![Dashboard](screenshots/dashboard.png)
+
+### Assessment Report
+
+![Assessment Report](screenshots/report.png)
+
+---
+
+## ✨ Features
+
+- 🔍 Full-site assessment workflow with one-click recon across every module
+- 📊 Risk scoring engine — score, risk level, severity-ranked findings, and remediation guidance
+- 🛡️ HTTP security header audit with missing-header detection
+- 🍪 Cookie flag audit (`Secure`, `HttpOnly`, `SameSite`)
+- ☁️ WAF / CDN fingerprinting (Cloudflare, Akamai, Fastly, and more)
+- 🔐 TLS certificate and protocol inspection with expiry findings
+- 🌐 DNS record lookups (A, AAAA, MX, NS, TXT)
+- 🚫 DNS-aware SSRF protection — localhost, private, loopback, link-local, and reserved targets are blocked even when reached via DNS or IPv6 rebinding
+- 📝 Form discovery with method/input analysis
+- 🧩 Technology fingerprinting for common frameworks and libraries
+- 🤖 `robots.txt` and `sitemap.xml` collection
+- 🔗 Parameterized URL discovery for validation review
+- 🌍 Subdomain sweep with live DNS resolution of common candidates
+- 📜 Live scan logs streamed into the results panel while a scan runs
+- 📚 Scan history persisted to `localStorage`
+- 📄 Export to JSON, CSV, or a printable/PDF report, plus copy-to-clipboard
+- 🌙 Dark / light theme, persisted and seeded from OS preference
+- ⚡ Optional per-IP rate limiting and short-TTL response caching (env-driven)
+- ♿ Responsive, accessible dashboard designed for demos and presentations
+
+---
+
+## 🛠️ Scan Modules
+
+| Module | Description |
+| --- | --- |
+| Full Assessment | Complete recon pass with scoring, findings, and recommendations |
+| Header Audit | Review security headers, server metadata, and response status |
+| Robots Review | Fetch `robots.txt` and inspect crawler rules for hidden paths |
+| Sitemap Pull | Retrieve `sitemap.xml` for discoverable routes and content |
+| Form Mapper | Extract forms, actions, methods, and exposed input names |
+| Tech Fingerprint | Detect common frameworks, libraries, and platform signatures |
+| Parameter Finder | Collect URLs that expose query parameters from page links |
+| Subdomain Sweep | Generate and DNS-resolve a starter subdomain surface |
+| DNS Lookup | Resolve A, AAAA, MX, NS, and TXT records |
+| TLS Inspection | Inspect the SSL/TLS certificate, expiry, and protocol version |
+
+---
+
+## 🏗️ Tech Stack
+
+**Frontend** — React 19 · Vite · CSS · react-icons · Framer Motion
+
+**Backend** — FastAPI · Uvicorn · Requests · BeautifulSoup · dnspython
+
+**DevOps** — Docker · Docker Compose · GitHub Actions CI · pytest
+
+---
+
+## 📁 Project Structure
 
 ```text
-frontend/     React dashboard, assessment report UI, export workflow
-api/          FastAPI routes, scan orchestration, scoring, logging
-scanners/     Standalone scanner experiments and CLI modules
-crawler/      Async/browser crawler experiments
-database/     Local scan log JSON storage
-exports/      Sample crawler and scanner output files
+Hacktrek-WebCrawler/
+├── api/            FastAPI routes, scan orchestration, scoring, logging
+├── frontend/       React dashboard, assessment report UI, export workflow
+├── scanners/       Standalone scanner experiments and CLI modules
+├── crawler/        Async/browser crawler experiments
+├── database/       Local scan log JSON storage
+├── exports/        Sample crawler and scanner output files
+├── tests/          Backend test suite (pytest, fully offline)
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+└── README.md
 ```
 
-## API Modules
+---
+
+## 🔌 API Reference
+
+All endpoints use `GET`.
 
 | Endpoint | Purpose |
 | --- | --- |
@@ -63,43 +117,47 @@ exports/      Sample crawler and scanner output files
 | `/headers?url=` | Collects HTTP response headers, cookie flags, and WAF/CDN hints |
 | `/forms?url=` | Extracts forms and input fields |
 | `/tech?url=` | Detects common technology signatures |
-| `/robots?url=` | Fetches robots.txt |
-| `/sitemap?url=` | Fetches sitemap.xml |
+| `/robots?url=` | Fetches `robots.txt` |
+| `/sitemap?url=` | Fetches `sitemap.xml` |
 | `/subdomains?url=` | Generates and DNS-resolves common subdomain candidates |
 | `/params?url=` | Finds URLs containing query parameters |
 | `/tls?url=` (alias `/ssl`) | Inspects the TLS certificate, expiry, and protocol version |
 | `/dns?url=` | Resolves A, AAAA, MX, NS, and TXT records |
 
-All endpoints use the `GET` method. Deployment (Docker, docker-compose) and a
-GitHub Actions CI workflow are included; see `Dockerfile`, `docker-compose.yml`,
-and `.github/workflows/ci.yml`.
+---
 
-## Scoring Model
+## 📊 Scoring Model
 
-The assessment score starts at 100 and subtracts weighted penalties for issues such as missing security headers, exposed technology banners, risky form methods, parameterized URLs, and error responses. The result is mapped into:
+The assessment score starts at 100 and subtracts weighted penalties for issues such as missing security headers, exposed technology banners, risky form methods, parameterized URLs, and error responses.
 
-- Low risk: 85-100
-- Moderate risk: 65-84
-- High risk: 40-64
-- Critical risk: 0-39
+| Score | Risk |
+| ---: | --- |
+| 85–100 | 🟢 Low |
+| 65–84 | 🟡 Moderate |
+| 40–64 | 🟠 High |
+| 0–39 | 🔴 Critical |
 
 This is an educational scoring model, not a replacement for a professional penetration test.
 
-## Run Locally
+---
 
-Install Python dependencies:
+## 🚀 Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/aaaryan04/Hacktrek-WebCrawler.git
+cd Hacktrek-WebCrawler
+```
+
+### 2. Install and start the backend
 
 ```bash
 pip install -r requirements.txt
-```
-
-Start the API:
-
-```bash
 uvicorn api.server:app --reload
 ```
 
-Install and start the frontend:
+### 3. Install and start the frontend
 
 ```bash
 cd frontend
@@ -107,14 +165,19 @@ npm install
 npm run dev
 ```
 
-By default, the frontend uses the deployed API URL. To use your local backend, copy the example environment file:
+Open `http://localhost:5173`.
+
+By default, the frontend points at the deployed API above. To use your local backend instead:
 
 ```bash
 cd frontend
-copy .env.example .env.local
+copy .env.example .env.local   # Windows
+# cp .env.example .env.local   # macOS / Linux
 ```
 
-## Testing
+---
+
+## 🧪 Testing
 
 Backend tests run fully offline (no network calls):
 
@@ -131,27 +194,62 @@ npm run lint
 npm run build
 ```
 
-## Demo Flow
+---
 
-1. Start the FastAPI backend and Vite frontend.
+## 🎬 Demo Flow
+
+1. Start the FastAPI backend and Vite frontend (or use the live demo above).
 2. Enter a target you own or have permission to test.
-3. Run `Full Assessment`.
+3. Run **Full Assessment**.
 4. Walk through the score, findings, technologies, missing headers, and recommendations.
-5. Export the JSON report as evidence.
+5. Export the JSON/CSV/PDF report as evidence.
 
-## Before Publishing on GitHub
+---
 
-Recommended cleanup before your first public push:
+## 📚 Documentation
 
-```bash
-git rm -r --cached node_modules frontend/node_modules venv api/__pycache__
-git rm --cached database/scan_logs.json
-git add .
-git commit -m "Prepare Hacktrek WebCrawler for public release"
-```
+- [Project Report](PROJECT_REPORT.md)
+- [Security Policy](SECURITY.md)
+- [Frontend Notes](frontend/README.md)
+- [Contributing](CONTRIBUTING.md)
 
-This keeps dependencies, virtual environments, runtime logs, and bytecode caches out of the public repository while preserving them locally.
+---
 
-## Responsible Use
+## 🤝 Contributing
 
-Use Hacktrek WebCrawler only on websites you own, manage, or have explicit permission to test. The project is intended for education, portfolio demonstration, and authorized reconnaissance.
+Contributions, bug reports, and feature requests are welcome.
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Commit your changes.
+4. Open a pull request.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup and configuration details.
+
+---
+
+## ⚠️ Responsible Use
+
+Hacktrek WebCrawler is designed for:
+
+- Educational purposes
+- Security research
+- Authorized penetration testing
+- Personal portfolio demonstrations
+
+Do **not** use this project against systems you do not own or do not have explicit permission to test.
+
+---
+
+## 👨‍💻 Author
+
+**Aryan Swarnkar**
+Cybersecurity · AI · Ethical Hacking
+
+- GitHub: [@aaaryan04](https://github.com/aaaryan04)
+
+---
+
+### ⭐ Support
+
+If you found this project useful, consider giving it a star on GitHub.
