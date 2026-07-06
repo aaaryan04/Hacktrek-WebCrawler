@@ -63,6 +63,16 @@ class Settings:
             "https://hacktrek-web-crawler.vercel.app",
         )
         self.allowed_origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
+        # Vercel gives every branch/preview deployment its own auto-generated
+        # subdomain (e.g. hacktrek-web-crawler-git-main-<team>.vercel.app,
+        # hacktrek-web-crawler-<hash>-<team>.vercel.app) in addition to the
+        # stable production domain. An exact-match allowlist misses those, so
+        # the dashboard's own "Visit" links can get silently CORS-blocked.
+        # Match any of them by prefix instead of hardcoding each one.
+        self.allowed_origin_regex = os.getenv(
+            "ALLOWED_ORIGIN_REGEX",
+            r"^https://hacktrek-web-crawler[a-z0-9-]*\.vercel\.app$",
+        )
         # Credentials are never used with a "*" wildcard (invalid per CORS spec).
         self.allow_credentials = (
             os.getenv("ALLOW_CREDENTIALS", "false").lower() == "true"
@@ -112,6 +122,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
+    allow_origin_regex=settings.allowed_origin_regex,
     allow_credentials=settings.allow_credentials,
     allow_methods=["GET", "OPTIONS"],
     allow_headers=["*"],

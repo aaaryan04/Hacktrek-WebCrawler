@@ -44,6 +44,7 @@ and edit as needed:
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `ALLOWED_ORIGINS` | localhost dev origins | Comma-separated CORS allow-list |
+| `ALLOWED_ORIGIN_REGEX` | matches `hacktrek-web-crawler*.vercel.app` | Regex CORS allow-list (covers Vercel preview URLs) |
 | `ALLOW_CREDENTIALS` | `false` | Allow credentialed CORS (ignored with `*`) |
 | `REQUEST_TIMEOUT` | `10` | Seconds before an outbound fetch times out |
 | `USER_AGENT` | `Hacktrek-WebCrawler/2.0` | UA sent on scan requests |
