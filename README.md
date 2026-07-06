@@ -21,7 +21,6 @@ A full-stack reconnaissance and website assessment platform built with **React, 
 
 ## 📸 Screenshots
 
-> Drop the corresponding image files into `screenshots/` with these exact names and they'll render below.
 
 ### Dashboard
 
