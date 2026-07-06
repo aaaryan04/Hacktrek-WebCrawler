@@ -222,22 +222,39 @@ function App() {
     let timeoutId;
     let attempt = 0;
 
-    const probe = () => {
-      fetch(`${API_BASE_URL}/`, { signal: controller.signal })
-        .then((response) => {
-          const ok = response.ok;
-          setApiStatus(ok ? "online" : "degraded");
-          attempt = ok ? 0 : attempt + 1;
-          const delay = ok ? 45000 : Math.min(4000 * 2 ** attempt, 20000);
-          timeoutId = setTimeout(probe, delay);
-        })
-        .catch((error) => {
-          if (error.name === "AbortError") return;
-          setApiStatus("offline");
-          attempt += 1;
-          timeoutId = setTimeout(probe, Math.min(4000 * 2 ** attempt, 20000));
-        });
-    };
+   const probe = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/health`, {
+      signal: controller.signal,
+      cache: "no-store",
+    });
+
+    const data = await response.json();
+
+    console.log("Health Response:", response.status, data);
+
+    if (response.ok && data.status === "ok") {
+      setApiStatus("online");
+      attempt = 0;
+    } else {
+      setApiStatus("degraded");
+      attempt++;
+    }
+  } catch (error) {
+    if (error.name === "AbortError") return;
+
+    console.error("Health Check Failed:", error);
+    setApiStatus("offline");
+    attempt++;
+  }
+
+  const delay =
+    apiStatus === "online"
+      ? 45000
+      : Math.min(4000 * 2 ** attempt, 20000);
+
+  timeoutId = setTimeout(probe, delay);
+};
 
     probe();
 
