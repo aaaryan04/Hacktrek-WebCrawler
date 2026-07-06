@@ -10,9 +10,10 @@ function getInitialTheme() {
   }
 
   try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
+    // Stored via useLocalStorage → JSON-encoded (e.g. "\"dark\""), so parse it.
+    const stored = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
     if (stored === "light" || stored === "dark") {
-      return JSON.parse(stored);
+      return stored;
     }
   } catch {
     // Fall through to system preference.
@@ -30,7 +31,7 @@ function getInitialTheme() {
  * so the CSS variable system can swap palettes.
  */
 export function useTheme() {
-  const [theme, setTheme] = useLocalStorage(STORAGE_KEY, getInitialTheme());
+  const [theme, setTheme] = useLocalStorage(STORAGE_KEY, getInitialTheme);
 
   useEffect(() => {
     const root = document.documentElement;

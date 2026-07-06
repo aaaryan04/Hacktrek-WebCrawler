@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 import { riskLevelClass } from "../utils/format";
 
 const LEVEL_COLORS = {
@@ -75,4 +77,4 @@ function RiskGauge({ score = 0, level = "" }) {
   );
 }
 
-export default RiskGauge;
+export default memo(RiskGauge);

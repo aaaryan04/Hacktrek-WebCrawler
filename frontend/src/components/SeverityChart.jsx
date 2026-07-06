@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 import { SEVERITY_COLORS, SEVERITY_ORDER } from "../utils/format";
 
 /**
@@ -35,4 +37,4 @@ function SeverityChart({ counts }) {
   );
 }
 
-export default SeverityChart;
+export default memo(SeverityChart);

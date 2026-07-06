@@ -33,6 +33,7 @@ function ScanHistory({ history, onSelect, onClear, activeId }) {
                 type="button"
                 className={`history-item ${entry.id === activeId ? "active" : ""}`}
                 onClick={() => onSelect(entry)}
+                aria-current={entry.id === activeId ? "true" : undefined}
               >
                 <span className="history-item-main">
                   <span className="history-item-target">{entry.target}</span>

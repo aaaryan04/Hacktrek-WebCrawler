@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import {
+  FaBolt,
+  FaBug,
   FaCode,
   FaFileAlt,
   FaGlobe,
+  FaLayerGroup,
   FaChartLine,
   FaNetworkWired,
+  FaPlay,
   FaRobot,
+  FaSatelliteDish,
   FaSearch,
   FaShieldAlt,
   FaSitemap,
@@ -15,6 +21,7 @@ import {
 import "./App.css";
 
 import Footer from "./components/Footer";
+import Logo from "./components/Logo";
 import Navbar from "./components/Navbar";
 import ResultPanel from "./components/ResultPanel";
 import ScanCard from "./components/ScanCard";
@@ -36,11 +43,11 @@ const HISTORY_LIMIT = 24;
 
 const SCAN_MODULES = [
   {
-    endpoint: "assessment",
-    title: "Full Assessment",
-    description: "Run a complete recon pass with scoring, findings, and recommendations.",
-    color: "#facc15",
-    icon: FaChartLine
+    endpoint: "robots",
+    title: "Robots Review",
+    description: "Fetch robots.txt and inspect crawler rules for hidden paths.",
+    color: "#f59e0b",
+    icon: FaRobot
   },
   {
     endpoint: "headers",
@@ -64,13 +71,6 @@ const SCAN_MODULES = [
     icon: FaCode
   },
   {
-    endpoint: "robots",
-    title: "Robots Review",
-    description: "Fetch robots.txt and inspect crawler rules for hidden paths.",
-    color: "#f59e0b",
-    icon: FaRobot
-  },
-  {
     endpoint: "sitemap",
     title: "Sitemap Pull",
     description: "Retrieve sitemap.xml for discoverable routes and content.",
@@ -90,6 +90,50 @@ const SCAN_MODULES = [
     description: "Collect URLs that expose query parameters from page links.",
     color: "#06b6d4",
     icon: FaSearch
+  },
+  {
+    endpoint: "assessment",
+    title: "Full Assessment",
+    description: "Run a complete recon pass with scoring, findings, and recommendations.",
+    color: "#facc15",
+    icon: FaChartLine
+  }
+];
+
+const HERO_FEATURES = [
+  {
+    icon: FaBolt,
+    title: "Fast Recon",
+    text: "Lightning-fast reconnaissance engine optimized for real-world workflows."
+  },
+  {
+    icon: FaSatelliteDish,
+    title: "Deep Intelligence",
+    text: "Technology fingerprinting, DNS intelligence, attack surface discovery, and infrastructure analysis."
+  },
+  {
+    icon: FaFileAlt,
+    title: "Actionable Results",
+    text: "Structured reports, JSON exports, findings, recommendations, and professional reporting."
+  }
+];
+
+// Right-hero glass cards — mirrors the reference dashboard's capability panel.
+const HERO_PANEL_CARDS = [
+  {
+    icon: FaGlobe,
+    title: "Live Target Scanning",
+    text: "Real-time reconnaissance and data collection."
+  },
+  {
+    icon: FaFileAlt,
+    title: "Structured JSON Results",
+    text: "Clean, structured & exportable results format."
+  },
+  {
+    icon: FaShieldAlt,
+    title: "Risk Scoring & Findings",
+    text: "Intelligent risk analysis with clear actionable insights."
   }
 ];
 
@@ -102,6 +146,28 @@ const initialStats = {
   technologies: 0,
   routes: 0
 };
+
+const STAT_CARDS = [
+  { key: "score", title: "Risk Score", icon: FaShieldAlt, color: "#f43f5e" },
+  { key: "findings", title: "Findings", icon: FaBug, color: "#fb923c" },
+  { key: "scans", title: "Scans Run", icon: FaPlay, color: "#38bdf8" },
+  { key: "headers", title: "Headers Found", icon: FaLayerGroup, color: "#14b8a6" },
+  { key: "forms", title: "Forms Found", icon: FaWpforms, color: "#a78bfa" },
+  { key: "technologies", title: "Tech Matches", icon: FaCode, color: "#8b5cf6" },
+  { key: "routes", title: "Routes Found", icon: FaSitemap, color: "#22c55e" }
+];
+
+/** Permissive client-side guard. The backend still performs DNS/SSRF validation. */
+function isValidTarget(value) {
+  const raw = value.trim();
+  if (!raw || /\s/.test(raw)) return false;
+  try {
+    const url = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
+    return url.hostname.includes(".") && url.hostname.length >= 3;
+  } catch {
+    return false;
+  }
+}
 
 function countRoutes(data) {
   if (data?.parameter_urls) {
@@ -122,6 +188,7 @@ function countRoutes(data) {
 function App() {
   const [url, setUrl] = useState("google.com");
   const [activeModule, setActiveModule] = useState("assessment");
+  const [scanningEndpoint, setScanningEndpoint] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [apiStatus, setApiStatus] = useState("checking");
@@ -135,12 +202,17 @@ function App() {
   const { toasts, push: pushToast, dismiss: dismissToast } = useToasts();
 
   const logTimer = useRef(null);
+  // Orchestration refs — the single source of truth for "which scan is current".
+  const scanSeqRef = useRef(0); // monotonically increasing id per scan attempt
+  const abortRef = useRef(null); // AbortController of the in-flight scan
+  const runScanRef = useRef(null); // latest runScan, for the global keyboard shortcut
 
   const activeScan = useMemo(
     () => SCAN_MODULES.find((module) => module.endpoint === activeModule),
     [activeModule]
   );
 
+  // API health probe — runs once, aborts on unmount. Never triggers a scan.
   useEffect(() => {
     const controller = new AbortController();
 
@@ -148,8 +220,8 @@ function App() {
       .then((response) => {
         setApiStatus(response.ok ? "online" : "degraded");
       })
-      .catch(() => {
-        setApiStatus("offline");
+      .catch((error) => {
+        if (error.name !== "AbortError") setApiStatus("offline");
       });
 
     return () => controller.abort();
@@ -163,11 +235,8 @@ function App() {
     setStreaming(false);
   }, []);
 
-  useEffect(() => stopLogPolling, [stopLogPolling]);
-
-  const startLogPolling = useCallback((target) => {
-    // Guard against orphaning a prior interval if a new scan starts while an
-    // earlier poll loop is still running (e.g. rapid module re-clicks).
+  const startLogPolling = useCallback((target, seq, signal) => {
+    // Replace any prior poll loop so only the current scan streams logs.
     if (logTimer.current) {
       clearInterval(logTimer.current);
       logTimer.current = null;
@@ -175,18 +244,22 @@ function App() {
     setStreaming(true);
 
     const poll = async () => {
+      // Bail out the moment this scan is superseded or aborted.
+      if (seq !== scanSeqRef.current || signal?.aborted) return;
       try {
         const response = await fetch(
-          `${API_BASE_URL}/logs?url=${encodeURIComponent(target)}`
+          `${API_BASE_URL}/logs?url=${encodeURIComponent(target)}`,
+          { signal }
         );
         if (!response.ok) return;
         const data = await response.json();
+        if (seq !== scanSeqRef.current) return;
         const lines = normalizeLogLines(data);
         if (lines.length) {
           setLiveLogs((current) => (lines.length >= current.length ? lines : current));
         }
       } catch {
-        // Log endpoint is best-effort; ignore transient failures.
+        // Log endpoint is best-effort; ignore transient/abort failures.
       }
     };
 
@@ -204,20 +277,34 @@ function App() {
     [setHistory]
   );
 
+  // Selecting a module NEVER scans — it only changes the active target module.
+  const selectModule = useCallback((endpoint) => {
+    setActiveModule(endpoint);
+  }, []);
+
   const runScan = useCallback(
     async (endpoint = activeModule) => {
       const target = url.trim();
       const module = SCAN_MODULES.find((item) => item.endpoint === endpoint);
 
-      if (!target) {
-        pushToast("Enter a target domain or URL before running a scan.", "error");
-        setResult({
-          error: "Enter a target domain or URL before running a scan."
-        });
+      if (!isValidTarget(target)) {
+        const message = target
+          ? "Enter a valid domain or URL (e.g. example.com)."
+          : "Enter a target domain or URL before running a scan.";
+        pushToast(message, "error");
+        setResult({ error: message });
         return;
       }
 
+      // Supersede any in-flight scan: cancel it and claim a fresh sequence id.
+      if (abortRef.current) abortRef.current.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+      const seq = scanSeqRef.current + 1;
+      scanSeqRef.current = seq;
+
       setActiveModule(endpoint);
+      setScanningEndpoint(endpoint);
       setActiveHistoryId(null);
       setLoading(true);
       setLiveLogs([
@@ -225,18 +312,19 @@ function App() {
         `Target queued: ${target}`,
         `Running ${module?.title || endpoint}`
       ]);
-      setResult({
-        module: module?.title || endpoint,
-        target
-      });
+      setResult({ module: module?.title || endpoint, target });
 
-      startLogPolling(target);
+      startLogPolling(target, seq, controller.signal);
 
       try {
         const response = await fetch(
-          `${API_BASE_URL}/${endpoint}?url=${encodeURIComponent(target)}`
+          `${API_BASE_URL}/${endpoint}?url=${encodeURIComponent(target)}`,
+          { signal: controller.signal }
         );
         const data = await response.json();
+
+        // A newer scan started while we awaited — drop this stale response.
+        if (seq !== scanSeqRef.current) return;
 
         if (!response.ok) {
           throw new Error(data.detail || `Request failed with ${response.status}`);
@@ -265,7 +353,7 @@ function App() {
             current.routes
         }));
 
-        const entryId = `${endpoint}-${Date.now()}`;
+        const entryId = `${endpoint}-${seq}`;
         recordHistory({
           id: entryId,
           target,
@@ -280,18 +368,47 @@ function App() {
 
         pushToast(`${module?.title || endpoint} completed for ${target}`, "success");
       } catch (error) {
-        setResult({
-          error: error.message,
-          module: module?.title || endpoint,
-          target
-        });
+        // Aborted or superseded scans stay silent — a newer scan owns the UI.
+        if (controller.signal.aborted || seq !== scanSeqRef.current) return;
+        setResult({ error: error.message, module: module?.title || endpoint, target });
         pushToast(`Scan failed: ${error.message}`, "error");
       } finally {
-        setLoading(false);
-        stopLogPolling();
+        // Only the newest scan is allowed to release the shared loading state.
+        if (seq === scanSeqRef.current) {
+          setLoading(false);
+          setScanningEndpoint(null);
+          stopLogPolling();
+          abortRef.current = null;
+        }
       }
     },
     [activeModule, url, pushToast, startLogPolling, stopLogPolling, recordHistory]
+  );
+
+  // Keep a ref to the freshest runScan for the global shortcut listener.
+  useEffect(() => {
+    runScanRef.current = runScan;
+  }, [runScan]);
+
+  // Ctrl/Cmd + Enter runs the active scan from anywhere on the page.
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        event.preventDefault();
+        runScanRef.current?.();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  // Abort any in-flight scan and stop polling when the app unmounts.
+  useEffect(
+    () => () => {
+      if (abortRef.current) abortRef.current.abort();
+      if (logTimer.current) clearInterval(logTimer.current);
+    },
+    []
   );
 
   const viewHistoryEntry = useCallback((entry) => {
@@ -310,42 +427,80 @@ function App() {
     pushToast("Scan history cleared", "info");
   }, [setHistory, pushToast]);
 
+  const handleRun = useCallback(() => runScan(activeModule), [runScan, activeModule]);
+
   return (
     <div className="page">
       <Navbar apiStatus={apiStatus} theme={theme} onToggleTheme={toggleTheme} />
 
       <main className="dashboard">
-        <section className="hero">
+        <motion.section
+          className="hero"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
           <div className="hero-copy">
             <p className="eyebrow">Reconnaissance dashboard</p>
-            <h1>Hacktrek WebCrawler</h1>
-            <p className="subtitle">
-              A FastAPI and React reconnaissance platform with risk scoring,
-              security findings, technology fingerprinting, and report-ready
-              output for authorized website assessments.
+            <h1 className="hero-title">
+              Hacktrek <span className="accent">WebCrawler</span>
+            </h1>
+
+            <p className="hero-tagline">
+              <FaShieldAlt aria-hidden="true" />
+              <span>Discover. Analyze. Secure.</span>
             </p>
+
+            <p className="subtitle">
+              Advanced reconnaissance platform for authorized security
+              assessments — fingerprint technologies, surface exposed assets,
+              and turn recon data into actionable intelligence.
+            </p>
+
+            <div className="hero-features">
+              {HERO_FEATURES.map(({ icon: Icon, title, text }) => (
+                <div className="hero-feature" key={title} title={text}>
+                  <span className="hero-feature-icon">
+                    <Icon aria-hidden="true" />
+                  </span>
+                  <strong>{title}</strong>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="hero-panel" aria-label="Project highlights">
-            <div>
-              <FaGlobe />
-              <span>Live target scanning</span>
+          <div className="hero-visual">
+            <div className="holo" aria-hidden="true">
+              <span className="holo-ring holo-ring--1" />
+              <span className="holo-ring holo-ring--2" />
+              <span className="holo-glow" />
+              <Logo size={92} glow className="holo-logo" />
+              <span className="holo-base" />
+              <span className="holo-particles" />
             </div>
-            <div>
-              <FaFileAlt />
-              <span>Structured JSON results</span>
-            </div>
-            <div>
-              <FaShieldAlt />
-              <span>Risk scoring and findings</span>
-            </div>
+
+            <ul className="hero-info-cards">
+              {HERO_PANEL_CARDS.map(({ icon: Icon, title, text }) => (
+                <li className="hero-info-card" key={title}>
+                  <span className="hero-info-icon">
+                    <Icon aria-hidden="true" />
+                  </span>
+                  <div>
+                    <strong>{title}</strong>
+                    <p>{text}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
-        </section>
+        </motion.section>
 
         <SearchBar
-          activeScan={activeScan}
+          modules={SCAN_MODULES}
+          activeModule={activeModule}
+          onSelectModule={selectModule}
           loading={loading}
-          onSearch={() => runScan(activeModule)}
+          onSearch={handleRun}
           setUrl={setUrl}
           url={url}
         />
@@ -361,10 +516,12 @@ function App() {
               <ScanCard
                 key={module.endpoint}
                 active={module.endpoint === activeModule}
+                loading={module.endpoint === scanningEndpoint}
                 description={module.description}
+                endpoint={module.endpoint}
                 icon={module.icon}
                 color={module.color}
-                onClick={() => runScan(module.endpoint)}
+                onSelect={selectModule}
                 title={module.title}
               />
             ))}
@@ -372,13 +529,15 @@ function App() {
         </section>
 
         <section className="stats-grid" aria-label="Scan statistics">
-          <StatsCard title="Risk Score" value={stats.score} />
-          <StatsCard title="Findings" value={stats.findings} />
-          <StatsCard title="Scans Run" value={stats.scans} />
-          <StatsCard title="Headers Found" value={stats.headers} />
-          <StatsCard title="Forms Found" value={stats.forms} />
-          <StatsCard title="Tech Matches" value={stats.technologies} />
-          <StatsCard title="Routes Found" value={stats.routes} />
+          {STAT_CARDS.map(({ key, title, icon, color }) => (
+            <StatsCard
+              key={key}
+              title={title}
+              value={stats[key]}
+              icon={icon}
+              color={color}
+            />
+          ))}
         </section>
 
         <div className="workspace">

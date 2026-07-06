@@ -38,6 +38,20 @@ except Exception:  # pragma: no cover - dnspython missing
 # ============================================
 
 
+def _env_float(name: str, default: float) -> float:
+    try:
+        return float(os.getenv(name, str(default)))
+    except (TypeError, ValueError):
+        return default
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, str(default)))
+    except (TypeError, ValueError):
+        return default
+
+
 class Settings:
     """Lightweight settings object populated from environment variables."""
 
@@ -54,11 +68,11 @@ class Settings:
             os.getenv("ALLOW_CREDENTIALS", "false").lower() == "true"
             and "*" not in self.allowed_origins
         )
-        self.request_timeout = float(os.getenv("REQUEST_TIMEOUT", "10"))
-        self.dns_timeout = float(os.getenv("DNS_TIMEOUT", "5"))
-        self.tls_timeout = float(os.getenv("TLS_TIMEOUT", "6"))
+        self.request_timeout = _env_float("REQUEST_TIMEOUT", 10.0)
+        self.dns_timeout = _env_float("DNS_TIMEOUT", 5.0)
+        self.tls_timeout = _env_float("TLS_TIMEOUT", 6.0)
         self.user_agent = os.getenv("USER_AGENT", "Hacktrek-WebCrawler/2.1")
-        self.max_redirects = int(os.getenv("MAX_REDIRECTS", "10"))
+        self.max_redirects = _env_int("MAX_REDIRECTS", 10)
         # Reliable public resolvers by default (the host's own resolver is often
         # slow/unreachable in container/CI environments). Set to "system" to use
         # the OS-configured nameservers instead.
@@ -763,8 +777,10 @@ def modules():
 
 
 @app.get("/logs")
-def logs():
-    return {"logs": get_logs()}
+def logs(url: str | None = Query(None, description="Target URL of the scan to stream logs for")):
+    # Scoping by the raw target string (the same value the frontend polls with)
+    # keeps concurrent scans for different targets from leaking into each other.
+    return {"logs": get_logs(scan_id=url)}
 
 
 # ============================================
@@ -775,7 +791,7 @@ def logs():
 @app.get("/assessment")
 def full_assessment(url: str = Query(..., description="Target URL or domain")):
     try:
-        clear_logs()
+        clear_logs(scan_id=url)
         add_log("[+] Starting full reconnaissance assessment...")
 
         target_url = normalize_url(url)
@@ -966,7 +982,7 @@ def full_assessment(url: str = Query(..., description="Target URL or domain")):
 @app.get("/headers")
 def header_scanner(url: str = Query(..., description="Target URL or domain")):
     try:
-        clear_logs()
+        clear_logs(scan_id=url)
         add_log("[+] Starting header scan...")
 
         url = normalize_url(url)
@@ -1008,7 +1024,7 @@ def header_scanner(url: str = Query(..., description="Target URL or domain")):
 @app.get("/forms")
 def form_extractor(url: str = Query(..., description="Target URL or domain")):
     try:
-        clear_logs()
+        clear_logs(scan_id=url)
         add_log("[+] Starting form extraction...")
 
         url = normalize_url(url)
@@ -1040,7 +1056,7 @@ def form_extractor(url: str = Query(..., description="Target URL or domain")):
 @app.get("/tech")
 def tech_detector(url: str = Query(..., description="Target URL or domain")):
     try:
-        clear_logs()
+        clear_logs(scan_id=url)
         add_log("[+] Starting technology detection...")
 
         url = normalize_url(url)
@@ -1067,7 +1083,7 @@ def tech_detector(url: str = Query(..., description="Target URL or domain")):
 @app.get("/robots")
 def robots_scanner(url: str = Query(..., description="Target URL or domain")):
     try:
-        clear_logs()
+        clear_logs(scan_id=url)
         add_log("[+] Fetching robots.txt...")
 
         url = normalize_url(url)
@@ -1097,7 +1113,7 @@ def robots_scanner(url: str = Query(..., description="Target URL or domain")):
 @app.get("/sitemap")
 def sitemap_scanner(url: str = Query(..., description="Target URL or domain")):
     try:
-        clear_logs()
+        clear_logs(scan_id=url)
         add_log("[+] Fetching sitemap.xml...")
 
         url = normalize_url(url)
@@ -1128,7 +1144,7 @@ def sitemap_scanner(url: str = Query(..., description="Target URL or domain")):
 @app.get("/subdomains")
 def subdomain_scanner(url: str = Query(..., description="Target URL or domain")):
     try:
-        clear_logs()
+        clear_logs(scan_id=url)
         add_log("[+] Starting subdomain sweep...")
 
         domain = extract_domain(url)
@@ -1163,7 +1179,7 @@ def subdomain_scanner(url: str = Query(..., description="Target URL or domain"))
 @app.get("/params")
 def parameter_extractor(url: str = Query(..., description="Target URL or domain")):
     try:
-        clear_logs()
+        clear_logs(scan_id=url)
         add_log("[+] Starting parameter extraction...")
 
         url = normalize_url(url)
@@ -1194,7 +1210,7 @@ def parameter_extractor(url: str = Query(..., description="Target URL or domain"
 @app.get("/ssl")
 def tls_inspector(url: str = Query(..., description="Target URL or domain")):
     try:
-        clear_logs()
+        clear_logs(scan_id=url)
         add_log("[+] Starting TLS inspection...")
 
         target_url = normalize_url(url)
@@ -1230,7 +1246,7 @@ def tls_inspector(url: str = Query(..., description="Target URL or domain")):
 @app.get("/dns")
 def dns_records(url: str = Query(..., description="Target URL or domain")):
     try:
-        clear_logs()
+        clear_logs(scan_id=url)
         add_log("[+] Starting DNS lookup...")
 
         domain = extract_domain(url)

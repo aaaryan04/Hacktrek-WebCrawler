@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 let counter = 0;
 
@@ -9,6 +9,14 @@ let counter = 0;
 export function useToasts() {
   const [toasts, setToasts] = useState([]);
   const timers = useRef(new Map());
+
+  useEffect(() => {
+    const timerMap = timers.current;
+    return () => {
+      timerMap.forEach((timer) => clearTimeout(timer));
+      timerMap.clear();
+    };
+  }, []);
 
   const dismiss = useCallback((id) => {
     setToasts((current) => current.filter((toast) => toast.id !== id));

@@ -28,7 +28,9 @@ export function riskLevelClass(level = "") {
 export function formatTimestamp(value) {
   if (!value) return "";
   try {
-    return new Date(value).toLocaleString(undefined, {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleString(undefined, {
       month: "short",
       day: "numeric",
       hour: "2-digit",

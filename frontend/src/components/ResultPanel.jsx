@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
+  FaChevronDown,
   FaCopy,
   FaFileCsv,
   FaFileCode,
@@ -17,6 +18,55 @@ import {
   exportJson,
   printReport
 } from "../utils/exporters";
+
+/**
+ * Lightweight, dependency-free JSON syntax highlighter. Tokens are rendered as
+ * React elements (never dangerouslySetInnerHTML), so values are always escaped.
+ */
+const TOKEN_RE =
+  /("(?:\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(?:true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g;
+
+function highlightJson(text) {
+  const nodes = [];
+  let lastIndex = 0;
+  let key = 0;
+  let match;
+
+  while ((match = TOKEN_RE.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      nodes.push(text.slice(lastIndex, match.index));
+    }
+    const token = match[0];
+    let cls = "tok-num";
+    if (token.startsWith('"')) {
+      cls = match[2] ? "tok-key" : "tok-str";
+    } else if (token === "true" || token === "false") {
+      cls = "tok-bool";
+    } else if (token === "null") {
+      cls = "tok-null";
+    }
+    nodes.push(
+      <span className={cls} key={`t-${key++}`}>
+        {token}
+      </span>
+    );
+    lastIndex = match.index + token.length;
+  }
+
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex));
+  }
+  return nodes;
+}
+
+function JsonView({ value }) {
+  const text = useMemo(
+    () => (value ? JSON.stringify(value, null, 2) : "No scan results yet."),
+    [value]
+  );
+  const nodes = useMemo(() => highlightJson(text), [text]);
+  return <pre className="json-view">{nodes}</pre>;
+}
 
 function getSummary(result) {
   if (!result) {
@@ -150,8 +200,8 @@ function AssessmentReport({ result }) {
             <h3>Technologies</h3>
             <div className="tag-list">
               {result.technologies?.length ? (
-                result.technologies.map((technology) => (
-                  <span key={technology}>{technology}</span>
+                result.technologies.map((technology, index) => (
+                  <span key={`${technology}-${index}`}>{technology}</span>
                 ))
               ) : (
                 <span>None detected</span>
@@ -163,8 +213,8 @@ function AssessmentReport({ result }) {
             <h3>Recommendations</h3>
             {result.recommendations?.length ? (
               <ul>
-                {result.recommendations.slice(0, 6).map((recommendation) => (
-                  <li key={recommendation}>{recommendation}</li>
+                {result.recommendations.slice(0, 6).map((recommendation, index) => (
+                  <li key={`${recommendation}-${index}`}>{recommendation}</li>
                 ))}
               </ul>
             ) : (
@@ -179,6 +229,7 @@ function AssessmentReport({ result }) {
 
 function ResultPanel({ loading, result, liveLogs, streaming, notify }) {
   const [copied, setCopied] = useState(false);
+  const [rawOpen, setRawOpen] = useState(true);
   const canExport = result && !loading && !result.error;
 
   const handleCopy = async () => {
@@ -234,10 +285,10 @@ function ResultPanel({ loading, result, liveLogs, streaming, notify }) {
                 className="export-button"
                 onClick={() => printReport(result)}
                 type="button"
-                title="Open printable report"
+                title="Open printable report (Save as PDF)"
               >
                 <FaPrint aria-hidden="true" />
-                <span>Print</span>
+                <span>PDF</span>
               </button>
               <button
                 className="export-button"
@@ -253,11 +304,7 @@ function ResultPanel({ loading, result, liveLogs, streaming, notify }) {
         </div>
       </div>
 
-      {loading ? (
-        <ResultSkeleton />
-      ) : (
-        <AssessmentReport result={result} />
-      )}
+      {loading ? <ResultSkeleton /> : <AssessmentReport result={result} />}
 
       <div className="result-layout">
         {showLiveLogs ? (
@@ -273,7 +320,18 @@ function ResultPanel({ loading, result, liveLogs, streaming, notify }) {
           </div>
         )}
 
-        <pre>{result ? JSON.stringify(result, null, 2) : "No scan results yet."}</pre>
+        <div className={`raw-json ${rawOpen ? "open" : "closed"}`}>
+          <button
+            type="button"
+            className="raw-json-toggle"
+            onClick={() => setRawOpen((open) => !open)}
+            aria-expanded={rawOpen}
+          >
+            <FaChevronDown aria-hidden="true" className="raw-json-caret" />
+            <span>Raw JSON</span>
+          </button>
+          {rawOpen && <JsonView value={result} />}
+        </div>
       </div>
     </section>
   );

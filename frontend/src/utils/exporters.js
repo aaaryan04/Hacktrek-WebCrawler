@@ -8,7 +8,9 @@ function triggerDownload(blob, filename) {
   document.body.appendChild(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(url);
+  // Defer revocation — some browsers read the blob URL asynchronously after
+  // the click, and revoking it synchronously can abort the download.
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 function safeName(result) {
@@ -28,7 +30,13 @@ export function exportJson(result) {
 }
 
 function csvCell(value) {
-  const text = value === null || value === undefined ? "" : String(value);
+  let text = value === null || value === undefined ? "" : String(value);
+  // Scan results can embed attacker-controlled strings from the target site
+  // (header values, form field names, evidence...). A leading =/+/-/@ would
+  // be interpreted as a formula by Excel/Sheets — neutralize it.
+  if (/^[=+\-@]/.test(text)) {
+    text = `'${text}`;
+  }
   if (/[",\n]/.test(text)) {
     return `"${text.replace(/"/g, '""')}"`;
   }

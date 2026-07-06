@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 
 /**
  * Terminal-style live log viewer. Auto-scrolls to the newest line.
@@ -23,4 +23,4 @@ function LiveLogs({ lines = [], streaming = false }) {
   );
 }
 
-export default LiveLogs;
+export default memo(LiveLogs);

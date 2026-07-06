@@ -3,8 +3,11 @@
  */
 function ResultSkeleton() {
   return (
-    <div className="skeleton-report" aria-hidden="true">
-      <div className="skeleton-overview">
+    <div className="skeleton-report">
+      <span className="sr-only" role="status">
+        Loading scan results…
+      </span>
+      <div className="skeleton-overview" aria-hidden="true">
         <div className="skeleton-block skeleton-gauge" />
         <div className="skeleton-lines">
           <span className="skeleton-line w-70" />
@@ -13,7 +16,7 @@ function ResultSkeleton() {
           <span className="skeleton-line w-80" />
         </div>
       </div>
-      <div className="skeleton-cards">
+      <div className="skeleton-cards" aria-hidden="true">
         <div className="skeleton-block skeleton-card" />
         <div className="skeleton-block skeleton-card" />
         <div className="skeleton-block skeleton-card" />
