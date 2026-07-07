@@ -48,7 +48,7 @@ function SearchBar({
           if (event.ctrlKey || event.metaKey) return;
           onSearch();
         }}
-        placeholder="example.com or https://example.com"
+        placeholder="Enter a target site, e.g. example.com"
         type="text"
         autoComplete="off"
         autoCapitalize="off"

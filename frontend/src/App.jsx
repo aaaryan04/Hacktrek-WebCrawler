@@ -186,7 +186,7 @@ function countRoutes(data) {
 }
 
 function App() {
-  const [url, setUrl] = useState("google.com");
+  const [url, setUrl] = useState("");
   const [activeModule, setActiveModule] = useState("assessment");
   const [scanningEndpoint, setScanningEndpoint] = useState(null);
   const [loading, setLoading] = useState(false);
